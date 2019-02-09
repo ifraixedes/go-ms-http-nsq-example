@@ -5,6 +5,8 @@ import (
 )
 
 // Service specifies the operations that the Driver Location Service expose.
+// All its methods can return the ErrAbortedCtx error code when the operation is
+// aborted because context cancellation or deadline exceeded.
 type Service interface {
 	// SetLocation store the location of the driver with the associated id.
 	// If the location was already set, it's ignore.
