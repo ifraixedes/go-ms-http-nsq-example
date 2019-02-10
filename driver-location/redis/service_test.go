@@ -2,7 +2,9 @@ package redis_test
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
+	"sync"
 	"testing"
 	"time"
 
@@ -19,7 +21,7 @@ func TestNewService(t *testing.T) {
 	type tcase struct {
 		desc   string
 		o      redis.Options
-		assert func(*testing.T, tcase, drvloc.Service, error)
+		assert func(*testing.T, tcase, *redis.Service, error)
 	}
 
 	var tcases = []tcase{
@@ -28,7 +30,7 @@ func TestNewService(t *testing.T) {
 			o: redis.Options{
 				Addr: testRedisAddr,
 			},
-			assert: func(t *testing.T, _ tcase, s drvloc.Service, err error) {
+			assert: func(t *testing.T, _ tcase, s *redis.Service, err error) {
 				assert.NoError(t, err)
 				assert.NotNil(t, s)
 			},
@@ -38,7 +40,7 @@ func TestNewService(t *testing.T) {
 			o: redis.Options{
 				Addr: "google.com:6379",
 			},
-			assert: func(t *testing.T, tc tcase, _ drvloc.Service, err error) {
+			assert: func(t *testing.T, tc tcase, _ *redis.Service, err error) {
 				testassert.ErrorWithCode(t, err, redis.ErrInvalidRedisConfig, errors.MD{K: "config", V: tc.o})
 			},
 		},
@@ -50,6 +52,10 @@ func TestNewService(t *testing.T) {
 			t.Parallel()
 
 			var s, err = redis.NewService(tc.o)
+			if s != nil {
+				defer require.NoError(t, s.Close(context.Background()))
+			}
+
 			tc.assert(t, tc, s, err)
 		})
 	}
@@ -140,7 +146,7 @@ func TestService_SetLocation(t *testing.T) {
 }
 
 func TestService_LocationsForLastMinutes(t *testing.T) {
-	var svc drvloc.Service
+	var svc *redis.Service
 	{
 		var err error
 		svc, err = redis.NewService(redis.Options{Addr: testRedisAddr})
@@ -248,5 +254,94 @@ func TestService_LocationsForLastMinutes(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Empty(t, ls)
+	})
+}
+
+func TestService_Close(t *testing.T) {
+	t.Run("error: Close after close", func(t *testing.T) {
+		var svc, err = redis.NewService(redis.Options{Addr: testRedisAddr})
+		require.NoError(t, err)
+
+		var ctx = context.Background()
+		err = svc.Close(ctx)
+		require.NoError(t, err)
+
+		err = svc.Close(ctx)
+		testassert.ErrorWithCode(t, err, redis.ErrClosedService)
+	})
+
+	t.Run("error: SetLocation after close", func(t *testing.T) {
+		var svc, err = redis.NewService(redis.Options{Addr: testRedisAddr})
+		require.NoError(t, err)
+
+		var ctx = context.Background()
+		err = svc.Close(ctx)
+		require.NoError(t, err)
+
+		err = svc.SetLocation(ctx, 1000, drvloc.Location{
+			Lat: 41.34617,
+			Lng: -118.50037,
+			At:  time.Now(),
+		})
+		testassert.ErrorWithCode(t, err, redis.ErrClosedService)
+	})
+
+	t.Run("error: LocationsForLastSeconds after close", func(t *testing.T) {
+		var svc, err = redis.NewService(redis.Options{Addr: testRedisAddr})
+		require.NoError(t, err)
+
+		var ctx = context.Background()
+		err = svc.Close(ctx)
+		require.NoError(t, err)
+
+		_, err = svc.LocationsForLastMinutes(ctx, 1000, 1)
+		testassert.ErrorWithCode(t, err, redis.ErrClosedService)
+	})
+
+	t.Run("ok: Close call concurrently", func(t *testing.T) {
+		var svc *redis.Service
+		{
+			var err error
+			svc, err = redis.NewService(redis.Options{Addr: testRedisAddr})
+			require.NoError(t, err)
+		}
+
+		var (
+			ctx = context.Background()
+			wg  sync.WaitGroup
+		)
+
+		wg.Add(1)
+		var closeCall = func() {
+			var err = svc.Close(ctx)
+			assert.NoError(t, err)
+			wg.Done()
+		}
+
+		wg.Add(1)
+		var svcCall = func() {
+			var err = svc.SetLocation(ctx, 1000, drvloc.Location{
+				Lat: 41.34617,
+				Lng: -118.50037,
+				At:  time.Now(),
+			})
+
+			if err != nil {
+				fmt.Printf("\n\n%+v\n\n", err)
+				testassert.ErrorWithCode(t, err, redis.ErrClosedService)
+			}
+
+			wg.Done()
+		}
+
+		if rand.Int()%2 == 0 {
+			go svcCall()
+			go closeCall()
+		} else {
+			go closeCall()
+			go svcCall()
+		}
+
+		wg.Wait()
 	})
 }

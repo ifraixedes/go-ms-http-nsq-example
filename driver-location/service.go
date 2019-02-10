@@ -21,6 +21,8 @@ type Service interface {
 	//
 	// Any implementation can returns one of the following error codes
 	//
+	//  * ErrInvalidDataFormatStore
+	//
 	//	* ErrNotFoundDriver
 	//
 	//  * ErrUnexpectedErrorStore
