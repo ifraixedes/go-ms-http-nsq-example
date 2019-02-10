@@ -139,6 +139,114 @@ func TestService_SetLocation(t *testing.T) {
 	}
 }
 
-func TestService_Locations(t *testing.T) {
-	t.Skipf("WIP: Implement")
+func TestService_LocationsForLastMinutes(t *testing.T) {
+	var svc drvloc.Service
+	{
+		var err error
+		svc, err = redis.NewService(redis.Options{Addr: testRedisAddr})
+		require.NoError(t, err)
+	}
+
+	t.Run("error: NotFoundDriver", func(t *testing.T) {
+		t.Parallel()
+
+		var (
+			dID     = uint64(rand.Int63n(100) + 100)
+			minutes = uint16(rand.Intn(5) + 1)
+		)
+
+		var _, err = svc.LocationsForLastMinutes(context.Background(), dID, minutes)
+		testassert.ErrorWithCode(t, err, drvloc.ErrNotFoundDriver, errors.MD{K: "id", V: dID})
+	})
+
+	t.Run("ok location", func(t *testing.T) {
+		t.Parallel()
+
+		// Expected values
+		var (
+			ctx   = context.Background()
+			dID   = uint64(rand.Int63n(100) + 200)
+			locs  []drvloc.Location
+			nlocs = rand.Intn(60) + 30
+			// due to the fact that this base time is calculate in advance than the base
+			// time used by the service function, +1 second is added for avoiding
+			// discrepancies in the expected result
+			baseTime = time.Unix(time.Now().Unix()+1-int64(nlocs*5), 0)
+		)
+
+		for i := 0; i < nlocs; i++ {
+			var (
+				lat, lng = spherand.Geographical()
+				loc      = drvloc.Location{
+					Lat: lat,
+					Lng: lng,
+					At:  time.Unix(baseTime.Unix()+int64(i*5), 0).Round(0),
+				}
+			)
+			locs = append(locs, loc)
+
+			var err = svc.SetLocation(ctx, dID, loc)
+			require.NoError(t, err)
+		}
+
+		// Insert some repeated locations for ensuring that these one won't be present
+		for i := rand.Intn(10) + (nlocs - 10); i < nlocs; i++ {
+			var err = svc.SetLocation(ctx, dID, locs[i])
+			require.NoError(t, err)
+		}
+
+		t.Run("some", func(t *testing.T) {
+			t.Parallel()
+
+			// Take 1 or 2 minutes randomly and calculate the index of the first
+			// location that it should be returned
+			var (
+				mins  = uint16(rand.Intn(1) + 1)
+				flIdx = nlocs - (60 / 5 * int(mins))
+			)
+
+			var ls, err = svc.LocationsForLastMinutes(ctx, dID, mins)
+			require.NoError(t, err)
+
+			assert.Equal(t, locs[flIdx:], ls)
+		})
+
+		t.Run("all", func(t *testing.T) {
+			t.Parallel()
+
+			var mins = uint16(nlocs*5/60) + 1
+
+			var ls, err = svc.LocationsForLastMinutes(ctx, dID, mins)
+			require.NoError(t, err)
+
+			assert.Equal(t, locs, ls)
+		})
+	})
+
+	t.Run("ok: no locations", func(t *testing.T) {
+		t.Parallel()
+
+		var (
+			ctx = context.Background()
+			dID = uint64(rand.Int63n(100) + 300)
+		)
+
+		var loc drvloc.Location
+		{
+			lat, lng := spherand.Geographical()
+			loc = drvloc.Location{
+				Lat: lat,
+				Lng: lng,
+				At:  time.Unix(time.Now().Unix()-120, 0), // it's 2 minutes ago
+			}
+		}
+
+		var err = svc.SetLocation(ctx, dID, loc)
+		require.NoError(t, err)
+
+		ls, err := svc.LocationsForLastMinutes(ctx, dID, 1)
+		require.NoError(t, err)
+
+		assert.Empty(t, ls)
+	})
 }

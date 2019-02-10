@@ -5,6 +5,8 @@ package redis
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/go-redis/redis"
 	drvloc "github.com/ifraixedes/go-ms-http-nsq-example/driver-location"
@@ -57,8 +59,36 @@ func (s service) SetLocation(ctx context.Context, id uint64, l drvloc.Location) 
 }
 
 func (s service) LocationsForLastMinutes(ctx context.Context, id uint64, minutes uint16) ([]drvloc.Location, error) {
-	// TODO: WIP
-	return nil, nil
+	var (
+		key = getDriverLocationSortedSetKey(id)
+		cli = s.getClient(ctx)
+	)
+
+	var ic = cli.Exists(key)
+	if err := ic.Err(); err != nil {
+		return nil, errors.Wrap(err, drvloc.ErrUnexpectedErrorStore)
+	}
+
+	if n, err := ic.Result(); err != nil {
+		return nil, errors.Wrap(err, drvloc.ErrUnexpectedErrorStore)
+	} else if n == 0 {
+		return nil, errors.New(drvloc.ErrNotFoundDriver, errors.MD{K: "id", V: id})
+	}
+
+	var ssc = cli.ZRangeByScore(key, redis.ZRangeBy{
+		Min: strconv.Itoa(int(time.Now().Unix() - (int64(minutes) * 60))),
+		Max: "+inf",
+	})
+	if err := ssc.Err(); err != nil {
+		return nil, errors.Wrap(err, drvloc.ErrUnexpectedErrorStore)
+	}
+
+	var locs []drvloc.Location
+	if err := ssc.ScanSlice(&locs); err != nil {
+		return nil, errors.Wrap(err, drvloc.ErrUnexpectedErrorStore)
+	}
+
+	return locs, nil
 }
 
 func (s service) getClient(ctx context.Context) redis.Cmdable {
