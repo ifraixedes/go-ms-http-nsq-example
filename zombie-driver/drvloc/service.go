@@ -7,6 +7,7 @@ import (
 
 	drvloc "github.com/ifraixedes/go-ms-http-nsq-example/driver-location"
 	zmbdrv "github.com/ifraixedes/go-ms-http-nsq-example/zombie-driver"
+	"github.com/umahmood/haversine"
 	"go.fraixed.es/errors"
 )
 
@@ -43,6 +44,41 @@ type Service struct {
 // IsZombie verifies if a driver with id is a zombie or not based on the
 // locations that drvloc.Service returns.
 func (s *Service) IsZombie(ctx context.Context, id uint64) (bool, error) {
-	// TODO: WIP
+	var locs, err = s.dlsvc.LocationsForLastMinutes(ctx, id, s.rules.LastMinutes)
+	if err != nil {
+		switch {
+		case errors.Is(err, drvloc.ErrNotFoundDriver):
+			return false, errors.New(zmbdrv.ErrNotFoundDriver, errors.MD{K: "id", V: id})
+		case err == ctx.Err():
+			return false, errors.New(zmbdrv.ErrAbortedCtx)
+		default:
+			return false, errors.Wrap(err, zmbdrv.ErrUnexpectedErrorSystem)
+		}
+	}
+
+	if len(locs) < 2 {
+		return true, nil
+	}
+
+	var (
+		pdis = locs[0]
+		tdis uint64
+	)
+	for _, l := range locs[1:] {
+		var (
+			p = haversine.Coord{Lat: pdis.Lat, Lon: pdis.Lng}
+			n = haversine.Coord{Lat: l.Lat, Lon: l.Lng}
+		)
+
+		var _, km = haversine.Distance(p, n)
+		tdis += uint64(km * 1000)
+
+		if tdis >= s.rules.MinDistance {
+			return false, nil
+		}
+
+		pdis = l
+	}
+
 	return true, nil
 }

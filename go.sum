@@ -23,8 +23,6 @@ github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c h1:964Od4U6p2jUkFxvCy
 github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c/go.mod h1:lNA+9X1NB3Zf8V7Ke586lFgjr2dZNuvo3lPJSGZ5JPQ=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
-github.com/magiconair/properties v1.8.0 h1:LLgXmsheXeRoUOBOjtwPQCWIYqM/LU1ayDtDePerRcY=
-github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/mattn/goveralls v0.0.2/go.mod h1:8d1ZMHsd7fW6IRPKQh46F2WRpyib5/X4FOpevwGNQEw=
 github.com/mmcloughlin/globe v0.0.0-20180909115233-4175779440e5 h1:C7SR1t/U8AJMkgEMRARAOkFsnhLG8kI4nL+NzWlheqQ=
 github.com/mmcloughlin/globe v0.0.0-20180909115233-4175779440e5/go.mod h1:sLu9TO1FGwD1gC+FrH8gqLGsfml+GZ6+JqUV+kMdDZk=
@@ -45,6 +43,8 @@ github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/tidwall/pinhole v0.0.0-20170713004337-171cd602c428 h1:/xGHsw7uLMqHVDg35G5+diYpQYcp1AhAtNUqyIc0K24=
 github.com/tidwall/pinhole v0.0.0-20170713004337-171cd602c428/go.mod h1:5VfbOBfzaI6Y0XiGSkz7hiXgKtwYaDBI3plwKGsLonM=
+github.com/umahmood/haversine v0.0.0-20151105152445-808ab04add26 h1:UFHFmFfixpmfRBcxuu+LA9l8MdURWVdVNUHxO5n1d2w=
+github.com/umahmood/haversine v0.0.0-20151105152445-808ab04add26/go.mod h1:IGhd0qMDsUa9acVjsbsT7bu3ktadtGOHI79+idTew/M=
 go.fraixed.es/errors v0.1.1 h1:QU7qdjwS5hlEokTjjxMK0vik/TFdz1/ZwnFR32qmdXk=
 go.fraixed.es/errors v0.1.1/go.mod h1:yMN+PYma53hjoNSD8pIlQtJU/2qypW0qtu9+GqRf0zM=
 golang.org/x/image v0.0.0-20190209060608-ef4a1470e0dc h1:P8UBp9iv2ZY5xjf9rnwI9s/hywlCgyKzpLsfk30IVyw=

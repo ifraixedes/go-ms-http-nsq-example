@@ -9,8 +9,8 @@ import (
 	"time"
 
 	drvloc "github.com/ifraixedes/go-ms-http-nsq-example/driver-location"
-	"github.com/ifraixedes/go-ms-http-nsq-example/driver-location/internal/testassert"
 	"github.com/ifraixedes/go-ms-http-nsq-example/driver-location/redis"
+	"github.com/ifraixedes/go-ms-http-nsq-example/internal/testassert"
 	"github.com/mmcloughlin/spherand"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
