@@ -2,6 +2,8 @@ package zmbdrv
 
 import "context"
 
+//go:generate mockgen -package mock -destination mock/service.go -mock_names=Service=Service github.com/ifraixedes/go-ms-http-nsq-example/zombie-driver Service
+
 // Service specifies the operations that the Zombie Driver Service exposes.
 //
 // All its methods can return the ErrAbortedCtx error code when the operation is

@@ -1,3 +1,6 @@
+
+TEST_HTTP_ADDR := 127.0.0.1:9001
+
 .PHONY: all test
 
 all:
@@ -5,4 +8,5 @@ all:
 
 test:
 	# Write test command(s) here
-	@go test -race ${TARGS} ./...
+	@DRV_LOC_TEST_HTTP_ADDR=${TEST_HTTP_ADDR} \
+		go test -race ${TARGS} ./...
