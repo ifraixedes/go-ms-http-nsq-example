@@ -18,4 +18,5 @@ require (
 	github.com/umahmood/haversine v0.0.0-20151105152445-808ab04add26
 	go.fraixed.es/errors v0.1.1
 	golang.org/x/image v0.0.0-20190209060608-ef4a1470e0dc // indirect
+	gopkg.in/yaml.v2 v2.2.1
 )
