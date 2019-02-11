@@ -1,4 +1,4 @@
-module github.com/ifraixedes/go-ms-http-nsq-example/driver-location
+module github.com/ifraixedes/go-ms-http-nsq-example
 
 require (
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
