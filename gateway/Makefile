@@ -5,3 +5,4 @@ all:
 
 test:
 	# Write test command(s) here
+	@go test -race ./...
