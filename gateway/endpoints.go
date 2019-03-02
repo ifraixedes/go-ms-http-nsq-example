@@ -62,7 +62,7 @@ func (e *endpoints) setDriverLocation(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (e *endpoints) getDirver(w http.ResponseWriter, r *http.Request) {
+func (e *endpoints) getDriver(w http.ResponseWriter, r *http.Request) {
 	var (
 		params = httptreemux.ContextParams(r.Context())
 		idp    = params["id"]

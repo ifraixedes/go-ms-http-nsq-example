@@ -20,7 +20,7 @@ import (
 // handlers, not any other configuration is set.
 func NewGateway(c Config) (*http.Server, error) {
 	if c == (Config{}) {
-		return nil, errors.New("Ivalid configuration")
+		return nil, errors.New("Invalid configuration")
 	}
 
 	var dlsvc, err = drvloc.NewClientNSQ(c.NSQdAddr, nsq.NewConfig(), c.setDriverLocation.NSQ.Topic)
@@ -61,13 +61,13 @@ func routeEndpoints(c Config, eps *endpoints) http.Handler {
 
 	switch c.getDriver.Method {
 	case http.MethodGet:
-		router.GET(c.getDriver.Path, eps.getDirver)
+		router.GET(c.getDriver.Path, eps.getDriver)
 	case http.MethodPost:
-		router.POST(c.getDriver.Path, eps.getDirver)
+		router.POST(c.getDriver.Path, eps.getDriver)
 	case http.MethodPut:
-		router.PUT(c.getDriver.Path, eps.getDirver)
+		router.PUT(c.getDriver.Path, eps.getDriver)
 	case http.MethodPatch:
-		router.PATCH(c.getDriver.Path, eps.getDirver)
+		router.PATCH(c.getDriver.Path, eps.getDriver)
 	default:
 		panic("there is a bug in some of the Config contructor " +
 			"functions, getDriver has an unsupported HTTP Method",
